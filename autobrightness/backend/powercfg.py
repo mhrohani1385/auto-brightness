@@ -4,11 +4,16 @@ import re
 import os
 from PyQt5.QtWidgets import QComboBox, QFormLayout
 from autobrightness import subprocess_args
+from subprocess import STARTUPINFO, SW_HIDE
 
 class Powercfg(IBackend):
     """
     This backend uses windows powercfg utility
     """
+
+    startupinfo = STARTUPINFO()
+    startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+    startupinfo.wShowWindow = SW_HIDE
 
     def __init__(self, lang, settings):
         super().__init__(lang, settings)
@@ -39,7 +44,7 @@ class Powercfg(IBackend):
 
         if self.guid is None:
             return None
-        result = subprocess.check_output(["POWERCFG", "/Q"], **self.args)
+        result = subprocess.check_output(["POWERCFG", "/Q"], startupinfo=startupinfo, **self.args)
         foundguid = False
         
         for line in result.split("\n"):
@@ -58,7 +63,7 @@ class Powercfg(IBackend):
         """
         Is computer plugged to AC power?
         """
-        result = subprocess.check_output(["wmic", "path", "Win32_Battery", "Get", "BatteryStatus"], **self.args)
+        result = subprocess.check_output(["wmic", "path", "Win32_Battery", "Get", "BatteryStatus"], startupinfo=startupinfo, **self.args)
         for line in result.split("\n"):
             line = line.rstrip()
             try:
@@ -91,7 +96,7 @@ class Powercfg(IBackend):
             form = QFormLayout()
             self.guidCombo = QComboBox()
 
-            result = subprocess.check_output(["POWERCFG", "/Q"], **self.args)
+            result = subprocess.check_output(["POWERCFG", "/Q"], startupinfo=startupinfo, **self.args)
             currentIndex = 0
             for line in result.split("\n"):
                 line = line.rstrip()
